@@ -1,5 +1,4 @@
-workflows:
-handmade_egypt_android:
+workflows:handmade_egypt_android:
 name: Handmade Egypt - Android
 max_build_duration: 60
 instance_type: mac_mini_m2
