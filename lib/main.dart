@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'theme/app_colors.dart';
+import 'screens/main_navigation_screen.dart'; // تأكد من استيراد شاشة التنقل الرئيسية
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +26,7 @@ class HandmadeEgyptApp extends StatelessWidget {
   }
 }
 
-// شاشة الترحيب المؤقتة (Splash Screen) مع شعار H&E
+// شاشة الترحيب (Splash Screen) مع شعار H&E
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -37,9 +38,14 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // الانتقال بعد 3 ثوانٍ للشاشة الرئيسية أو Onboarding
+    // الانتقال بعد 3 ثوانٍ للشاشة الرئيسية (MainNavigationScreen)
     Future.delayed(const Duration(seconds: 3), () {
-      // هنا يتم توجيه المستخدم لاحقاً
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+        );
+      }
     });
   }
 
