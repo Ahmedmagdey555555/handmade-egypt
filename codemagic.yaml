@@ -1,6 +1,6 @@
 workflows:
   handmade_egypt_android:
-    name: Handmade Egypt - Android APK
+    name: Handmade Egypt - Android
     max_build_duration: 60
     instance_type: mac_mini_m2
 
@@ -8,17 +8,655 @@ workflows:
       flutter: stable
 
     scripts:
-      - name: Create Flutter Android project
+      - name: Create Flutter project
         script: |
           flutter create --platforms=android --project-name handmade_egypt .
-
-      - name: Get dependencies
+      
+      - name: Create Handmade Egypt interface
         script: |
-          flutter pub get
+          cat > lib/main.dart <<'DART'
+          import 'package:flutter/material.dart';
 
-      - name: Build release APK
-        script: |
-          flutter build apk --release
+          const forest = Color(0xFF173D30);
+          const gold = Color(0xFFC6A45C);
+          const cream = Color(0xFFFAF6EE);
+          const ink = Color(0xFF292929);
 
-    artifacts:
-      - build/app/outputs/flutter-apk/*.apk
+          void main() {
+            runApp(const HandmadeEgyptApp());
+          }
+
+          class HandmadeEgyptApp extends StatelessWidget {
+            const HandmadeEgyptApp({super.key});
+
+            @override
+            Widget build(BuildContext context) {
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: 'هاند ميد مصر',
+                theme: ThemeData(
+                  useMaterial3: true,
+                  scaffoldBackgroundColor: cream,
+                  colorScheme: ColorScheme.fromSeed(
+                    seedColor: forest,
+                    primary: forest,
+                    secondary: gold,
+                  ),
+                  fontFamily: 'Roboto',
+                ),
+                home: const Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: HomePage(),
+                ),
+              );
+            }
+          }
+
+          class HomePage extends StatefulWidget {
+            const HomePage({super.key});
+
+            @override
+            State<HomePage> createState() => _HomePageState();
+          }
+
+          class _HomePageState extends State<HomePage> {
+            int selectedTab = 0;
+            final searchController = TextEditingController();
+
+            final categories = const [
+              ['🧶', 'كروشيه'],
+              ['🪡', 'تطريز'],
+              ['💍', 'إكسسوارات'],
+              ['🎁', 'هدايا'],
+              ['🏺', 'ديكورات'],
+              ['🧵', 'مفروشات'],
+            ];
+
+            final products = const [
+              ['👜', 'شنطة كروشيه يدوية', '350 ج.م', 'كروشيه'],
+              ['💍', 'إكسسوار بتصميم مميز', '180 ج.م', 'إكسسوارات'],
+              ['🧸', 'دمية هاند ميد', '250 ج.م', 'هدايا'],
+              ['🪴', 'قطعة ديكور مصنوعة يدويًا', '420 ج.م', 'ديكورات'],
+            ];
+
+            @override
+            void dispose() {
+              searchController.dispose();
+              super.dispose();
+            }
+
+            void showMessage(String message) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(message),
+                  backgroundColor: forest,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+
+            void showDesignForm() {
+              final description = TextEditingController();
+              final material = TextEditingController();
+              final size = TextEditingController();
+              final quantity = TextEditingController(text: '1');
+
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: cream,
+                builder: (sheetContext) {
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      left: 20,
+                      right: 20,
+                      top: 24,
+                      bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 24,
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            'نفّذ تصميمك ✨',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: forest,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'اكتب تفاصيل فكرتك، وسنجهز لك نموذج الطلب.',
+                            style: TextStyle(color: ink),
+                          ),
+                          const SizedBox(height: 20),
+                          TextField(
+                            controller: description,
+                            maxLines: 3,
+                            decoration: const InputDecoration(
+                              labelText: 'وصف التصميم المطلوب',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: material,
+                            decoration: const InputDecoration(
+                              labelText: 'الخامة أو نوع المنتج',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: size,
+                            decoration: const InputDecoration(
+                              labelText: 'المقاس واللون',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: quantity,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'الكمية',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: forest,
+                              padding: const EdgeInsets.all(15),
+                            ),
+                            onPressed: () {
+                              if (description.text.trim().isEmpty) {
+                                showMessage('من فضلك اكتب وصف التصميم أولًا');
+                                return;
+                              }
+
+                              Navigator.pop(sheetContext);
+                              showMessage(
+                                'تم تجهيز بيانات طلبك التجريبي. '
+                                'إرسال الطلب فعليًا يحتاج ربط النظام بالخادم.',
+                              );
+                            },
+                            child: const Text('تجهيز الطلب'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            }
+
+            @override
+            Widget build(BuildContext context) {
+              return Scaffold(
+                appBar: AppBar(
+                  backgroundColor: forest,
+                  foregroundColor: cream,
+                  elevation: 0,
+                  title: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: gold, width: 1.5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          'H',
+                          style: TextStyle(
+                            color: gold,
+                            fontSize: 27,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'هاند ميد مصر',
+                            style: TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'HANDMADE EGYPT',
+                            style: TextStyle(
+                              fontSize: 9,
+                              letterSpacing: 2,
+                              color: gold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    IconButton(
+                      onPressed: () => showMessage('المفضلة ستتوفر مع ربط النظام'),
+                      icon: const Icon(Icons.favorite_border),
+                    ),
+                  ],
+                ),
+                body: IndexedStack(
+                  index: selectedTab,
+                  children: [
+                    buildHome(),
+                    buildCategoriesPage(),
+                    buildOrdersPage(),
+                    buildAccountPage(),
+                  ],
+                ),
+                bottomNavigationBar: NavigationBar(
+                  backgroundColor: Colors.white,
+                  indicatorColor: gold.withValues(alpha: 0.25),
+                  selectedIndex: selectedTab,
+                  onDestinationSelected: (index) {
+                    setState(() => selectedTab = index);
+                  },
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.home_outlined),
+                      selectedIcon: Icon(Icons.home),
+                      label: 'الرئيسية',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.grid_view_outlined),
+                      selectedIcon: Icon(Icons.grid_view),
+                      label: 'الأقسام',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.shopping_bag_outlined),
+                      selectedIcon: Icon(Icons.shopping_bag),
+                      label: 'طلباتي',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.person_outline),
+                      selectedIcon: Icon(Icons.person),
+                      label: 'حسابي',
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            Widget buildHome() {
+              final query = searchController.text.trim();
+
+              final filteredProducts = products.where((product) {
+                return query.isEmpty ||
+                    product[1].contains(query) ||
+                    product[3].contains(query);
+              }).toList();
+
+              return ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  TextField(
+                    controller: searchController,
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      hintText: 'بتدور على إيه؟',
+                      prefixIcon: const Icon(Icons.search, color: forest),
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          searchController.clear();
+                          setState(() {});
+                        },
+                        icon: const Icon(Icons.close),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [forest, Color(0xFF285844)],
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                      ),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: gold, width: 1),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'صُنع بحب في مصر',
+                          style: TextStyle(
+                            color: gold,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'كل قطعة لها حكاية',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'اكتشف إبداعات صُنّاع الحرف اليدوية المصرية.',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            height: 1.6,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: gold,
+                            side: const BorderSide(color: gold),
+                          ),
+                          onPressed: () {
+                            setState(() => selectedTab = 1);
+                          },
+                          child: const Text('اكتشف المنتجات'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  InkWell(
+                    onTap: showDesignForm,
+                    borderRadius: BorderRadius.circular(18),
+                    child: Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0E5CC),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.auto_awesome, color: forest, size: 32),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'نفّذ تصميمك',
+                                  style: TextStyle(
+                                    color: forest,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                SizedBox(height: 5),
+                                Text(
+                                  'عندك فكرة خاصة؟ ابدأ بوصفها هنا.',
+                                  style: TextStyle(color: ink, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.arrow_back_ios, color: forest, size: 17),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  sectionTitle('تسوّق حسب القسم'),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 105,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: categories.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) {
+                        return InkWell(
+                          onTap: () {
+                            setState(() => selectedTab = 1);
+                          },
+                          child: SizedBox(
+                            width: 83,
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: 65,
+                                  height: 65,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(18),
+                                    border: Border.all(
+                                      color: gold.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    categories[index][0],
+                                    style: const TextStyle(fontSize: 28),
+                                  ),
+                                ),
+                                const SizedBox(height: 7),
+                                Text(
+                                  categories[index][1],
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: ink,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  sectionTitle(query.isEmpty ? 'اختيارات مميزة' : 'نتائج البحث'),
+                  const SizedBox(height: 12),
+                  if (filteredProducts.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Center(
+                        child: Text('مفيش منتجات مطابقة لبحثك حاليًا'),
+                      ),
+                    )
+                  else
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filteredProducts.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 0.72,
+                      ),
+                      itemBuilder: (context, index) {
+                        final product = filteredProducts[index];
+                        return productCard(product);
+                      },
+                    ),
+                  const SizedBox(height: 24),
+                  const Center(
+                    child: Text(
+                      'صناعة مصرية • تفاصيل تصنع الفرق',
+                      style: TextStyle(color: forest, fontSize: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              );
+            }
+
+            Widget sectionTitle(String title) {
+              return Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: gold,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: forest,
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            Widget productCard(List<String> product) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFEAE2D3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF2EBDD),
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(18),
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            width: double.infinity,
+                            child: Text(
+                              product[0],
+                              style: const TextStyle(fontSize: 58),
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            left: 8,
+                            child: Material(
+                              color: Colors.white,
+                              shape: const CircleBorder(),
+                              child: IconButton(
+                                constraints: const BoxConstraints.tightFor(
+                                  width: 36,
+                                  height: 36,
+                                ),
+                                padding: EdgeInsets.zero,
+                                onPressed: () => showMessage(
+                                  'المفضلة ستتوفر عند ربط حساب العميل',
+                                ),
+                                icon: const Icon(
+                                  Icons.favorite_border,
+                                  size: 19,
+                                  color: forest,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            product[1],
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: ink,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            product[2],
+                            style: const TextStyle(
+                              color: forest,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: () => showMessage(
+                                'الشراء والسلة يحتاجان ربط نظام الطلبات.',
+                              ),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: forest,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                              ),
+                              child: const Text('عرض المنتج'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            Widget buildCategoriesPage() {
+              return ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  const Text(
+                    'أقسام هاند ميد مصر',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: forest,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  ...categories.map((category) {
+                    return Card(
+                      color: Colors.white,
+                      child: ListTile(
+                        leading: Text(
+                          category[0],
+                          style: const TextStyle(fontSize: 30),
+                        ),
+                        title: Text(
+                          category[1],
+                          style: const TextStyle(
+                            color: forest,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        trailing: const Icon(Icons.arrow_back_ios, size: 16),
+                        onTap: () {
+                          showMessage(
+                            'قسم
