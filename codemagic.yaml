@@ -16,6 +16,10 @@ workflows:
         script: |
           flutter pub get
 
+      - name: Generate App Launcher Icons
+        script: |
+          flutter pub run flutter_launcher_icons:main
+
       - name: Validate Flutter source
         script: |
           flutter analyze lib || true
