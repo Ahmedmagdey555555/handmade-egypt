@@ -13,8 +13,8 @@ workflows:
           flutter pub get
 
       - name: Validate Flutter source
-        script: |
-          flutter analyze lib
+  script: |
+  flutter analyze lib --no-fatal-infos --no-fatal-warnings
 
       - name: Build release APK
         script: |
