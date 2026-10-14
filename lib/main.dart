@@ -126,13 +126,6 @@ descriptionEn: 'Handcrafted furniture with Egyptian character.',
 ),
 ];
 
-class HandmadeEgyptApp extends StatefulWidget {
-const HandmadeEgyptApp({super.key});
-
-@override
-State<HandmadeEgyptApp> createState() => _HandmadeEgyptAppState();
-}
-
 class _HandmadeEgyptAppState extends State<HandmadeEgyptApp> {
 bool isArabic = true;
 
@@ -142,23 +135,30 @@ super.initState();
 _loadLanguage();
 }
 
-Future<void> loadLanguage() async {
+Future<void> _loadLanguage() async {
 try {
 final language = await LocalStorage.getLanguage();
 if (!mounted) return;
-setState(() => isArabic = language != 'en');
-} catch () {
-// استمرار التطبيق بالعربية إذا تعذر تحميل الإعداد.
+
+  setState(() {
+    isArabic = language != 'en';
+  });
+} catch (_) {
+  // استمرار التطبيق بالعربية إذا تعذر تحميل الإعداد.
 }
 }
 
 Future<void> _toggleLanguage() async {
-setState(() => isArabic = !isArabic);
+setState(() {
+isArabic = !isArabic;
+});
 
 try {
   await LocalStorage.saveLanguage(isArabic ? 'ar' : 'en');
 } catch (_) {
   // تغيير اللغة يظل فعالًا خلال الجلسة الحالية.
+}
+
 }
 
 }
